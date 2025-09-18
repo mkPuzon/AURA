@@ -1,0 +1,7 @@
+python-dotenv==1.1.1
+arxiv==2.2.0
+# pandas==2.3.2
+psycopg2==2.9.10
+ipykernel # for running Jupyter notebooks
+
+google-genai # query Google llms through Gemini API
