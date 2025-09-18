@@ -1,0 +1,66 @@
+'''scrapers.py
+
+Contains functions to get relevant research papers from the web. Currenlty can query:
+- arXiv
+
+Sep 2025
+'''
+import os
+import time
+import feedparser # parse/extract from RSS and Atom feeds
+import urllib.request # opening URLs
+
+from google import genai # query Gemini
+from dotenv import load_dotenv # load in sensitive .env variables
+
+def get_arxiv_records(query, sort_by="date", order="descending", max_results=2):
+    if " " in query:
+        query = query.replace(" ", "+")
+    
+    if sort_by == "date":
+        sort_method = "submittedDate"
+    elif sort_by == "popularity":
+        sort_method = "relevance"
+    else:
+        raise ValueError(f"Unknown sorting request by: {sort_by}. Valid options: date, popularity.")
+    
+    if order not in ["descending", "ascending"]:
+        raise ValueError(f"Unknown sorting order: {order}. Valid options: ascending, descending.")
+    
+    request = f"http://export.arxiv.org/api/query?search_query=all:{query}&sortBy={sort_method}&sortOrder={order}&max_results={max_results}"
+    
+    with urllib.request.urlopen(request) as url:
+        response = url.read()
+        
+    feed = feedparser.parse(response) # feedparser.util.FeedParserDict    
+    # inspect_dictionary(feed)
+    
+    records = {}
+    paper_num = 0
+    for entry in feed.entries:
+        # get relevant info from feedparser and add to records list Python dict
+        title = entry.title.strip()
+        date_submitted = entry.published
+        tags = ', '.join(t['term'] for t in entry.tags) if entry.tags else None
+        abstract = entry.summary.strip()
+        
+        try:
+            authors = ', '.join(author.name for author in entry.authors)
+        except AttributeError:
+            authors = entry.author
+        try:
+            affiliation = entry.arxiv_affiliation
+        except AttributeError:
+            affiliation = None
+            
+        records[paper_num] = {
+        "title": title,
+        "date_submitted": date_submitted[:10],
+        "tags": tags,
+        "authors": authors,
+        "abstract": abstract,
+        "affiliation": affiliation
+        }   
+        paper_num += 1
+        
+    return records
