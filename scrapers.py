@@ -64,3 +64,14 @@ def get_arxiv_records(query, sort_by="date", order="descending", max_results=2):
         paper_num += 1
         
     return records
+
+def get_keywords(abstract, keywords=5):
+    '''Using a Google LLM to extract keywords from a paper abstract.'''
+    model = "gemini-2.5-flash-lite"
+    prompt = f"For the following paper abstract, extract {keywords} keywords to describe the topic and content of the paper. Return they keywords in a Python list. Return only the Python list, no extra words. For example: ['computer science', 'RAG', 'higher education', ...]. Here is the abstrac to analyze: {abstract}"
+    
+    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+    response = client.models.generate_content(
+        model=model, contents=prompt
+    )
+    return response.text
