@@ -44,6 +44,13 @@ def get_arxiv_records(query, sort_by="date", order="descending", max_results=2):
         tags = ', '.join(t['term'] for t in entry.tags) if entry.tags else None
         abstract = entry.summary.strip()
         
+        pdf_url = None
+        for link in entry.links:
+            # The PDF link is identified by rel="related" and title="pdf" 
+            if link.get('title') == 'pdf' and link.get('rel') == 'related':
+                pdf_url = link.get('href')
+                break
+        
         try:
             authors = ', '.join(author.name for author in entry.authors)
         except AttributeError:
@@ -59,7 +66,8 @@ def get_arxiv_records(query, sort_by="date", order="descending", max_results=2):
         "tags": tags,
         "authors": authors,
         "abstract": abstract,
-        "affiliation": affiliation
+        "affiliation": affiliation,
+        "pdf_url": pdf_url
         }   
         paper_num += 1
         
