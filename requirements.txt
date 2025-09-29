@@ -4,3 +4,4 @@ python-dotenv   # for environment variables
 ipykernel       # for running Jupyter notebooks
 google-genai    # query Google llms through Gemini API
 setuptools
+feedparser
