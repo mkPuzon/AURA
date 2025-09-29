@@ -4,9 +4,11 @@ AI Understanding, Research, and Analytic glossary for AI education
 Project developed on Windows 11 and uses Python 3.12.10
 
 # TODOs
+- [ ] Format data as .json per batch
 - [ ] Look into how to get more data about the papers themselves/query defintions from paper content
 - [ ] Extract keywords
 - [ ] Send definition queries to Gemma3 on Gandalf
+
 - [ ] Design PostgreSQL table system
 
 # Notes
