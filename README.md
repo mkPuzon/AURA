@@ -1,15 +1,20 @@
 # AURA
 AI Understanding, Research, and Analytic glossary for AI education
 
-Project developed on Windows 11 and uses Python 3.12.10
+Project developed on Ubuntu 23.04 and uses Python 3.11.4
 
 # TODOs
-- [ ] Format data as .json per batch
-- [ ] Look into how to get more data about the papers themselves/query defintions from paper content
 - [ ] Extract keywords
-- [ ] Send definition queries to Gemma3 on Gandalf
+    - [ ] Determine standard if keywords are not present
+    - [ ] Determine standard if keywords are similar to one another (merge? collection?)
+- [ ] Get definitions from papers 
+    - [ ] Set up Ollama querying
+    - [ ] Extract key concepts
+        - [ ] Compare with keywords
+    - [ ] Test queries for quality definitions
 
 - [ ] Design PostgreSQL table system
+    - [ ] Hook up pipeline for Python script to PostgreSQL db from .json
 
 # Notes
 Currently queries Gemini 2.5 Flash Lite through the Google API for keyword extraction. I am limited by the free teir rates:
