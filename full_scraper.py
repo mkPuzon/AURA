@@ -9,7 +9,7 @@ import time
 import subprocess
 from datetime import datetime
 
-from scrapers import get_arxiv_records, get_keywords
+from scrapers import get_arxiv_metadata_batch
 
 def scrape_papers(query, sort_by="date", order="descending", max_results=2, verbose=False):
     # for naming conventions
@@ -19,8 +19,8 @@ def scrape_papers(query, sort_by="date", order="descending", max_results=2, verb
         print(f"======== Attempting to scrape {max_results} papers from arxiv.org with query: {query}")
     
     t0 = time.time()
-    # get aticle metadata; includes pdf_url but not pdf itself 
-    metadata_dict = get_arxiv_records(query=query, sort_by=sort_by, order=order, max_results=max_results)
+    # get article metadata; includes pdf_url but not pdf itself 
+    metadata_dict = get_arxiv_metadata_batch(query=query, sort_by=sort_by, order=order, max_results=max_results)
     
     if verbose:
         t1_metadata = time.time()
@@ -33,7 +33,7 @@ def scrape_papers(query, sort_by="date", order="descending", max_results=2, verb
     # use a subprocess to run shell command from within python script: https://docs.python.org/3/library/subprocess.html
     for paper in metadata_dict:
         o1 = subprocess.run(["arxiv-downloader", metadata_dict[paper].get("pdf_url"), "-d" f"./papers/papers_{date}"])
-    
+
     if verbose:
         t1_papers = time.time()
         print(f"======== Papers downloaded in {t1_papers-t3:.2f} seconds")
