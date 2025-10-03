@@ -1,7 +1,11 @@
-# Tested on Windows 11 using Python 3.12.10
+# Tested on Ubuntu 23.04 using Python 3.11.4
 
 python-dotenv   # for environment variables
 ipykernel       # for running Jupyter notebooks
+
+feedparser      # parse atom feed from arXiv request
+setuptools      
+
 google-genai    # query Google llms through Gemini API
-setuptools
-feedparser
+
+psycopg2        # connect to PostgreSQL db
