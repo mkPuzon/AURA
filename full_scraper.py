@@ -32,7 +32,7 @@ def scrape_papers(query, sort_by="date", order="descending", max_results=2, verb
     t3 = time.time()
     # use a subprocess to run shell command from within python script: https://docs.python.org/3/library/subprocess.html
     for paper in metadata_dict:
-        o1 = subprocess.run(["arxiv-downloader", metadata_dict[paper].get("pdf_url"), "-d" f"./papers/papers_{date}"])
+        o1 = subprocess.run(["arxiv-downloader", metadata_dict[paper].get("pdf_url"), "-d" f"../../mkpuzo-data/AURA_pdfs/papers_{date}"])
 
     if verbose:
         t1_papers = time.time()
@@ -48,7 +48,7 @@ def scrape_papers(query, sort_by="date", order="descending", max_results=2, verb
         t1_metadata = time.time()
         print(f"======== Metadata saved in {t1_metadata-t3:.2f} seconds")
         
-    print(f"\n ======== {max_results} papers saved | ./metadata/metadata_{date}.json{t1_metadata-t3:.2f} |  ./papers/papers_{date} | total time: {time.time()-t0:.2f} seconds")
+    print(f"\n ======== {max_results} papers saved | ./metadata/metadata_{date}.json{t1_metadata-t3:.2f} |  /home/mkpuzo/mkpuzo-data/AURA_pdfs/papers_{date} | total time: {time.time()-t0:.2f} seconds")
     
     
 if __name__ == "__main__":
