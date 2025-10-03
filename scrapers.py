@@ -70,7 +70,6 @@ def get_arxiv_metadata_batch(query, sort_by="date", order="descending", max_resu
             "tags": tags,
             "authors": authors,
             "abstract": abstract,
-            "affiliation": affiliation,
             "pdf_url": pdf_url,
             "full_arxiv_url": full_arxiv_url
         }   
