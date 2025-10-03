@@ -12,8 +12,9 @@ import urllib.request # opening URLs
 
 from google import genai # query Gemini
 from dotenv import load_dotenv # load in sensitive .env variables
+from utils import inspect_dictionary
 
-def get_arxiv_records(query, sort_by="date", order="descending", max_results=2):
+def get_arxiv_metadata_batch(query, sort_by="date", order="descending", max_results=2):
     if " " in query:
         query = query.replace(" ", "+")
     
