@@ -1,18 +1,18 @@
 '''scrapers.py
 
-Contains functions to get relevant research papers from the web. Currenlty can query:
+Contains functions to get relevant research papers from the web. Currently can query:
 - arXiv
 
 Sep 2025
 '''
 import os
 import time
+import uuid
 import feedparser # parse/extract from RSS and Atom feeds
 import urllib.request # opening URLs
 
 from google import genai # query Gemini
 from dotenv import load_dotenv # load in sensitive .env variables
-from utils import inspect_dictionary
 
 def get_arxiv_metadata_batch(query, sort_by="date", order="descending", max_results=2):
     if " " in query:
@@ -20,10 +20,10 @@ def get_arxiv_metadata_batch(query, sort_by="date", order="descending", max_resu
     
     if sort_by == "date":
         sort_method = "submittedDate"
-    elif sort_by == "popularity":
+    elif sort_by == "relevance":
         sort_method = "relevance"
     else:
-        raise ValueError(f"Unknown sorting request by: {sort_by}. Valid options: date, popularity.")
+        raise ValueError(f"Unknown sorting request by: {sort_by}. Valid options: date, relevance.")
     
     if order not in ["descending", "ascending"]:
         raise ValueError(f"Unknown sorting order: {order}. Valid options: ascending, descending.")
@@ -45,6 +45,7 @@ def get_arxiv_metadata_batch(query, sort_by="date", order="descending", max_resu
         tags = ', '.join(t['term'] for t in entry.tags) if entry.tags else None
         abstract = entry.summary.strip()
         
+        full_arxiv_url = entry.link
         pdf_url = None
         for link in entry.links:
             # The PDF link is identified by rel="related" and title="pdf" 
@@ -62,13 +63,16 @@ def get_arxiv_metadata_batch(query, sort_by="date", order="descending", max_resu
             affiliation = None
             
         records[paper_num] = {
-        "title": title,
-        "date_submitted": date_submitted[:10],
-        "tags": tags,
-        "authors": authors,
-        "abstract": abstract,
-        "affiliation": affiliation,
-        "pdf_url": pdf_url
+            "uuid" : str(uuid.uuid4()),
+            "title": title,
+            "date_submitted": date_submitted[:10],
+            "date_scraped": time.time(),
+            "tags": tags,
+            "authors": authors,
+            "abstract": abstract,
+            "affiliation": affiliation,
+            "pdf_url": pdf_url,
+            "full_arxiv_url": full_arxiv_url
         }   
         paper_num += 1
         
