@@ -7,8 +7,8 @@ Project developed on Ubuntu 23.04 and uses Python 3.11.4
 The `full_scraper.py` file provides a `scrape_papers()` function which scrapes any given number of papers from arXiv based on a given search query. Filtering options include by date or relevance (ascending or decending for either). This scrapes relevant metadata and saves it to a .json file as well as locally saving the .pdf file for text extraction.
 
 # TODOs
-- [ ] Add uuid and full arXiv URL to metadata dict
-- [ ] Write function to extract text from pdfs
+- [ ] Set up full text extract text from pdfs
+    - [ ] Try image extraction to save alongside?
 - [ ] Hook up pipeline for Python script to PostgreSQL db from .json
 - [ ] Set up Ollama querying to Gemma3
     - [ ] Prompt engineer to reliably extract keywords/important terms
