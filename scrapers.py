@@ -71,7 +71,8 @@ def get_arxiv_metadata_batch(query, sort_by="date", order="descending", max_resu
             "authors": authors,
             "abstract": abstract,
             "pdf_url": pdf_url,
-            "full_arxiv_url": full_arxiv_url
+            "full_arxiv_url": full_arxiv_url,
+            "full_text": None
         }   
         paper_num += 1
         

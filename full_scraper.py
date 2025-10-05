@@ -7,6 +7,7 @@ Sep 2025
 import json
 import time
 import subprocess
+from pathlib import Path
 from datetime import datetime
 
 from scrapers import get_arxiv_metadata_batch
@@ -14,6 +15,7 @@ from scrapers import get_arxiv_metadata_batch
 def scrape_papers(query, sort_by="date", order="descending", max_results=2, verbose=False):
     # for naming conventions
     date = datetime.today().strftime('%Y-%m-%d')
+    pdf_save_dir = f"../../mkpuzo-data/AURA_pdfs/papers_{date}"
     
     if verbose:
         print(f"======== Attempting to scrape {max_results} papers from arxiv.org with query: {query}")
@@ -30,17 +32,33 @@ def scrape_papers(query, sort_by="date", order="descending", max_results=2, verb
             print(f"[{paper}] {metadata_dict[paper]['title']} ---- {metadata_dict[paper]['date_submitted']}")
     
     t3 = time.time()
+    
+    # ================ Downlaod pdfs ================ #
+    
     # use a subprocess to run shell command from within python script: https://docs.python.org/3/library/subprocess.html
     for paper in metadata_dict:
-        o1 = subprocess.run(["arxiv-downloader", metadata_dict[paper].get("pdf_url"), "-d" f"../../mkpuzo-data/AURA_pdfs/papers_{date}"])
+        o1 = subprocess.run(["arxiv-downloader", metadata_dict[paper].get("pdf_url"), "-d", pdf_save_dir])
 
     if verbose:
         t1_papers = time.time()
         print(f"======== Papers downloaded in {t1_papers-t3:.2f} seconds")
+        
+    paper_num = 0
+    for file in Path(pdf_save_dir).iterdir():
+        if file.suffix.lower() == ".pdf":
+            text = extract_raw_text(file)
+            metadata_dict[paper_num]["full_text"] = text
+            paper_num += 1
+            
+    if verbose:
+        t1_text = time.time()
+        print(f"======== Text extracted in {t1_text-t1_papers:.2f} seconds")
+        
+    # ================ Generate keywords from text ================ #
     
-    print()
+        
+    # ================ Dump to json file ================ #
     t3 = time.time()
-    # dump metadata to json file
     with open(f"./metadata/metadata_{date}.json", "w") as f:
         json.dump(metadata_dict, f, indent=2)
         
