@@ -51,7 +51,7 @@ def query_ollama_model(paper_txt, model="gemma3:12b"):
                     pass
 
     t1 = time.time()
-    print(f"     == Model response extracted in {t1-t0:.2f} seconds")
+    print(f"    == Keywords extracted in {t1-t0:.2f} seconds")
     return model_response
 
 def get_definitions(keywords, paper_txt,model="gemma3:12b"):
@@ -85,46 +85,76 @@ def get_definitions(keywords, paper_txt,model="gemma3:12b"):
                     pass
 
     t1 = time.time()
-    print(f"    == Model response extracted in {t1-t0:.2f} seconds")
+    print(f"    == Definitions extracted in {t1-t0:.2f} seconds")
     return model_response
+
+def check_keywords(keywords):
+    pattern = r'\[(.*?)\]'
+    match = re.search(pattern, keywords, re.DOTALL)
+    if match:
+        list_content = match.group(1)
+        keywords = re.findall(r'["\']([^"\']+)["\']', list_content)
+    return keywords
+
+def check_definitions(definitions):
+    dict_pattern = r'\{(?:[^{}]|(?:\{[^{}]*\}))*\}'
+    dict_match = re.search(dict_pattern, definitions, re.DOTALL)
+    if dict_match:
+        try:
+            import ast
+            definitions_dict = ast.literal_eval(dict_match.group())
+            if isinstance(definitions_dict, dict):
+                return definitions_dict
+            else:
+                print(f"\n    Invalid dictionary format.")
+        except (ValueError, SyntaxError) as e:
+            print(f"\n    Failed to parse dictionary.")
+    else:
+        print(f"    No dictionary found in model response.")
+        return {}
+    
+def generate_keywords_and_defs(batch_filepath, model="gemma3:12b", verbose=False):
+    load_dotenv()
+    try:
+        updated_dict = {}
+        
+        with open(batch_filepath, "r") as f:
+            metadata_dict = json.load(f)
+            
+            for i in range(len(metadata_dict.keys())): # for every paper
+                print(f"\n\n{i}: {metadata_dict[str(i)]['full_arxiv_url']}")
+                    
+                keywords = query_ollama_model(paper_txt=metadata_dict[str(i)]['abstract'])
+                # make sure keywords are a proper python list
+                keywords = check_keywords(keywords)
+                if keywords:
+                    definitions = get_definitions(keywords=keywords, paper_txt=metadata_dict[str(i)]['full_text'])
+                    definitions = check_definitions(definitions)
+                    metadata_dict[str(i)]["keywords"] = keywords
+                    metadata_dict[str(i)]["definitions"] = definitions
+                    if verbose:
+                        print(f"    == Keywords: {keywords}")
+                        if definitions:
+                            for key, value in definitions.items():
+                                print(f"    * {key}: {value}")
+                else:
+                    metadata_dict[str(i)]["keywords"] = []
+                    metadata_dict[str(i)]["definitions"] = {}
+                    if verbose:
+                        print("    == No keywords found.")
+                        
+                updated_dict[str(i)] = metadata_dict[str(i)]
+                        
+            with open(batch_filepath, "w") as f:
+                json.dump(updated_dict, f, indent=2)
+                
+                
+    except FileNotFoundError:
+        print(f"[ERROR] File not found. Double check folder exists at: {batch_filepath}")
+        return
+
 
 if __name__ == "__main__":
     load_dotenv()
-    file_path = "metadata/metadata_2025-10-05.json"
-    # for 3 example papers
-    with open(file_path, "r") as f:
-        metadata_dict = json.load(f)
-        for i in range(len(metadata_dict.keys())-7):
-            print(f"\n\n{i}: {metadata_dict[str(i)]['full_arxiv_url']}")
-            keywords = query_ollama_model(paper_txt=metadata_dict[str(i)]['abstract'])
-            # print(f"    {keywords}")
-            
-            # find list if one exists
-            pattern = r'\[(.*?)\]'
-            match = re.search(pattern, keywords, re.DOTALL)
-            if match:
-                list_content = match.group(1)
-                keywords = re.findall(r'["\']([^"\']+)["\']', list_content)
-                print(f"    {keywords}")
-                definitions = get_definitions(keywords=keywords, paper_txt=metadata_dict[str(i)]['full_text'])
-                
-                dict_pattern = r'\{(?:[^{}]|(?:\{[^{}]*\}))*\}'
-                dict_match = re.search(dict_pattern, definitions, re.DOTALL)
-                if dict_match:
-                    try:
-                        import ast
-                        definitions_dict = ast.literal_eval(dict_match.group())
-                        if isinstance(definitions_dict, dict):
-                            print(f"\n    {definitions_dict}")
-                        else:
-                            print(f"\n    Invalid dictionary format: {definitions}")
-                    except (ValueError, SyntaxError) as e:
-                        print(f"\n    Failed to parse dictionary: {e}")
-                        # print(f"\n    Raw output: {definitions}")
-                else:
-                    # print(f"\n    No dictionary found in: {definitions}")
-                    pass
-            else:
-                print("No list found.")
-        
-        
+    file_path = "metadata/metadata_2025-10-07.json"
+    generate_keywords_and_defs(file_path, verbose=True)
