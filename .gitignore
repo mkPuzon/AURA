@@ -1,5 +1,7 @@
 metadata
-papers
+papers_core
+
+scraper_tests.ipynb
 
 ######## Standard Python .gitignore ########
 
