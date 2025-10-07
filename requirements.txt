@@ -9,3 +9,5 @@ setuptools
 google-genai    # query Google llms through Gemini API
 
 psycopg2        # connect to PostgreSQL db
+
+pdfminer.six    # process pdfs
