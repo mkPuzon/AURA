@@ -11,6 +11,7 @@ from pathlib import Path
 from datetime import datetime
 
 from scrapers import get_arxiv_metadata_batch
+from pdfminer.high_level import extract_text
 
 def scrape_papers(query, sort_by="date", order="descending", max_results=2, verbose=False):
     # for naming conventions
@@ -46,7 +47,7 @@ def scrape_papers(query, sort_by="date", order="descending", max_results=2, verb
     paper_num = 0
     for file in Path(pdf_save_dir).iterdir():
         if file.suffix.lower() == ".pdf":
-            text = extract_raw_text(file)
+            text = extract_text(file)
             metadata_dict[paper_num]["full_text"] = text
             paper_num += 1
             
