@@ -4,6 +4,7 @@
 
 Sep 2025
 '''
+import sys
 import json
 import time
 import subprocess
@@ -13,9 +14,8 @@ from datetime import datetime
 from scrapers import get_arxiv_metadata_batch
 from pdfminer.high_level import extract_text
 
-def scrape_papers(query, sort_by="date", order="descending", max_results=2, verbose=False):
+def scrape_papers(query, date, sort_by="date", order="descending", max_results=2, verbose=False):
     # for naming conventions
-    date = datetime.today().strftime('%Y-%m-%d')
     pdf_save_dir = f"../../mkpuzo-data/AURA_pdfs/papers_{date}"
     
     if verbose:
@@ -65,10 +65,13 @@ def scrape_papers(query, sort_by="date", order="descending", max_results=2, verb
         
     if verbose:
         t1_metadata = time.time()
-        print(f"======== Metadata saved in {t1_metadata-t3:.2f} seconds")
+        print(f"======== Metadata saved in {t1_metadata-t3:.2f} seconds ({t1_metadata-t3/60:.2f} minutes)")
         
     print(f"\n ======== {max_results} papers saved | ./metadata/metadata_{date}.json{t1_metadata-t3:.2f} |  /home/mkpuzo/mkpuzo-data/AURA_pdfs/papers_{date} | total time: {time.time()-t0:.2f} seconds")
     
     
 if __name__ == "__main__":
-    scrape_papers(query="artificial intelligence", max_results=10, verbose=True)
+    if len(sys.argv) != 2:
+        print("Usage: python full_scraper.py <date>")
+        sys.exit(1)
+    scrape_papers(query="artificial intelligence", date=sys.argv[1], max_results=10, verbose=True)

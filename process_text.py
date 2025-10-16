@@ -14,8 +14,10 @@ Aug 2025
 '''
 import os
 import re
+import sys
 import json
 import time
+import datetime
 import requests
 
 from dotenv import load_dotenv
@@ -55,7 +57,11 @@ def query_ollama_model(paper_txt, model="gemma3:12b"):
     return model_response
 
 def get_definitions(keywords, paper_txt,model="gemma3:12b"):
-    ollama_url = os.getenv("OLLAMA_API")
+    if not keywords:
+        return {}
+    
+    # ollama_url = os.getenv("OLLAMA_API")
+    ollama_url = os.getenv("OLLAMA_DAI_API")
     sys_prompt = f"{keywords}: {os.getenv('OLLAMA_PROMPT_DEFINITION_1')}"
     headers = {"Content-Type": "application/json"}
     
@@ -124,11 +130,11 @@ def generate_keywords_and_defs(batch_filepath, model="gemma3:12b", verbose=False
             for i in range(len(metadata_dict.keys())): # for every paper
                 print(f"\n\n{i}: {metadata_dict[str(i)]['full_arxiv_url']}")
                     
-                keywords = query_ollama_model(paper_txt=metadata_dict[str(i)]['abstract'])
+                keywords = query_ollama_model(paper_txt=metadata_dict[str(i)]['abstract'], model=model)
                 # make sure keywords are a proper python list
                 keywords = check_keywords(keywords)
                 if keywords:
-                    definitions = get_definitions(keywords=keywords, paper_txt=metadata_dict[str(i)]['full_text'])
+                    definitions = get_definitions(keywords=keywords, paper_txt=metadata_dict[str(i)]['full_text'], model=model)
                     definitions = check_definitions(definitions)
                     metadata_dict[str(i)]["keywords"] = keywords
                     metadata_dict[str(i)]["definitions"] = definitions
@@ -155,6 +161,12 @@ def generate_keywords_and_defs(batch_filepath, model="gemma3:12b", verbose=False
 
 
 if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage: python process_text.py <date>")
+        sys.exit(1)
+        
     load_dotenv()
-    file_path = "metadata/metadata_2025-10-07.json"
-    generate_keywords_and_defs(file_path, verbose=True)
+
+    file_path = f"metadata/metadata_{sys.argv[1]}.json"
+    generate_keywords_and_defs(file_path, verbose=True, model="llama3.3")
+    # generate_keywords_and_defs(file_path, verbose=True, model="gemma3")
