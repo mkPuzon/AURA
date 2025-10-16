@@ -1,8 +1,6 @@
 metadata
 papers_core
 
-scraper_tests.ipynb
-
 ######## Standard Python .gitignore ########
 
 # Byte-compiled / optimized / DLL files
