@@ -22,7 +22,7 @@ import requests
 
 from dotenv import load_dotenv
 
-def query_ollama_model(paper_txt, model="gemma3:12b"):
+def query_ollama_model(paper_txt, model="gemma3:12b", verbose=False):
     ollama_url = os.getenv("OLLAMA_API")
     sys_prompt = os.getenv("OLLAMA_PROMPT_KEYWORD_1")
     headers = {"Content-Type": "application/json"}
@@ -53,15 +53,19 @@ def query_ollama_model(paper_txt, model="gemma3:12b"):
                     pass
 
     t1 = time.time()
-    print(f"    == Keywords extracted in {t1-t0:.2f} seconds")
+    if verbose:
+        print(f"    == Keywords extracted in {t1-t0:.2f} seconds")
     return model_response
 
-def get_definitions(keywords, paper_txt,model="gemma3:12b"):
+def get_definitions(keywords, paper_txt, model="gemma3:12b", verbose=False):
     if not keywords:
         return {}
-    
-    # ollama_url = os.getenv("OLLAMA_API")
-    ollama_url = os.getenv("OLLAMA_DAI_API")
+    if model == "gemma3:12b":
+        ollama_url = os.getenv("OLLAMA_API")
+    elif model == "llama3.3":
+        ollama_url = os.getenv("OLLAMA_DAI_API")
+    else:
+        raise ValueError("Invalid model name: {model}. Valid options: gemma3:12b, llama3.3")
     sys_prompt = f"{keywords}: {os.getenv('OLLAMA_PROMPT_DEFINITION_1')}"
     headers = {"Content-Type": "application/json"}
     
@@ -91,7 +95,8 @@ def get_definitions(keywords, paper_txt,model="gemma3:12b"):
                     pass
 
     t1 = time.time()
-    print(f"    == Definitions extracted in {t1-t0:.2f} seconds")
+    if verbose:
+        print(f"    == Definitions extracted in {t1-t0:.2f} seconds")
     return model_response
 
 def check_keywords(keywords):
@@ -119,7 +124,7 @@ def check_definitions(definitions):
         print(f"    No dictionary found in model response.")
         return {}
     
-def generate_keywords_and_defs(batch_filepath, model="gemma3:12b", verbose=False):
+def generate_keywords_and_defs(batch_filepath, kwd_model="gemma3:12b", def_model="llama3.3", verbose=False):
     load_dotenv()
     try:
         updated_dict = {}
@@ -128,13 +133,14 @@ def generate_keywords_and_defs(batch_filepath, model="gemma3:12b", verbose=False
             metadata_dict = json.load(f)
             
             for i in range(len(metadata_dict.keys())): # for every paper
-                print(f"\n\n{i}: {metadata_dict[str(i)]['full_arxiv_url']}")
+                if verbose:
+                    print(f"\n\n{i}: {metadata_dict[str(i)]['full_arxiv_url']}")
                     
-                keywords = query_ollama_model(paper_txt=metadata_dict[str(i)]['abstract'], model=model)
+                keywords = query_ollama_model(paper_txt=metadata_dict[str(i)]['abstract'], model=kwd_model)
                 # make sure keywords are a proper python list
                 keywords = check_keywords(keywords)
-                if keywords:
-                    definitions = get_definitions(keywords=keywords, paper_txt=metadata_dict[str(i)]['full_text'], model=model)
+                if keywords and (metadata_dict[str(i)]['full_text'] is not None):
+                    definitions = get_definitions(keywords=keywords, paper_txt=metadata_dict[str(i)]['full_text'], model=def_model, verbose=verbose)
                     definitions = check_definitions(definitions)
                     metadata_dict[str(i)]["keywords"] = keywords
                     metadata_dict[str(i)]["definitions"] = definitions
@@ -168,5 +174,5 @@ if __name__ == "__main__":
     load_dotenv()
 
     file_path = f"metadata/metadata_{sys.argv[1]}.json"
-    generate_keywords_and_defs(file_path, verbose=True, model="llama3.3")
+    generate_keywords_and_defs(file_path, kwd_model="gemma3:12b", def_model="gemma3:12b", verbose=False)
     # generate_keywords_and_defs(file_path, verbose=True, model="gemma3")
