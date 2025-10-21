@@ -6,15 +6,39 @@ Sep 2025
 '''
 import os
 import sys
+import time
 import json
-import subprocess
+import urllib.request
 
 from pathlib import Path
 from pypdf import PdfReader
-from datetime import datetime
 from scrapers import get_arxiv_metadata_batch
 
-def scrape_papers(query, date, sort_by="date", order="descending", max_results=2, verbose=False):
+def download_pdf(pdf_url, save_dir, output_filename=None):
+    
+    if output_filename is None:
+        try:
+            # extract article ID from the URL path for use as the filename
+            arxiv_id = pdf_url.split('/')[-1]
+            output_filename = f"{arxiv_id}.pdf"
+        except IndexError:
+            print("Error: Could not derive filename from URL.")
+            return False
+
+    print(f"Attempting to download PDF from: {pdf_url}")
+    print(f"Saving file as: {output_filename}")
+    
+    try:
+        urllib.request.urlretrieve(pdf_url, os.path.join(save_dir, output_filename))
+        
+        print(f"Download successful! File saved at: {os.path.abspath(os.path.join(save_dir, output_filename))}")
+        return True
+    
+    except Exception as e:
+        print(f"Error downloading {pdf_url}: {e}")
+        return False
+    
+def scrape_papers(query, date, max_results=2, verbose=False):
     # for naming conventions
     pdf_save_dir = f"../../mkpuzo-data/AURA_pdfs/papers_{date}"
     os.makedirs(pdf_save_dir, exist_ok=True)
@@ -26,8 +50,16 @@ def scrape_papers(query, date, sort_by="date", order="descending", max_results=2
     for paper_id, info in metadata_dict.items():
         pdf_url = info.get("pdf_url")
         if pdf_url:
-            # TODO: change this to a basic HTML query
-            subprocess.run(["arxiv-downloader", pdf_url, "-d", pdf_save_dir])
+            time.sleep(3) # The API manual recommends a 3-second delay when calling the API multiple times
+            try:
+                download_pdf(pdf_url, pdf_save_dir)
+            except Exception as e:
+                print(f"[ERROR] Issue downloading PDF {pdf_url}: {e}")
+                
+    # for paper_id, info in metadata_dict.items():
+    #     pdf_url = info.get("pdf_url")
+    #     if pdf_url:
+    #         subprocess.run(["arxiv-downloader", pdf_url, "-d", pdf_save_dir])
 
     # extract text from each downloaded PDF using PyPDF
     for i, file in enumerate(Path(pdf_save_dir).glob("*.pdf")):
