@@ -5,6 +5,7 @@
 Sep 2025
 '''
 import os
+import re
 import sys
 import time
 import json
@@ -25,19 +26,26 @@ def download_pdf(pdf_url, save_dir, output_filename=None):
             print("Error: Could not derive filename from URL.")
             return False
 
-    print(f"Attempting to download PDF from: {pdf_url}")
-    print(f"Saving file as: {output_filename}")
+    # print(f"Attempting to download PDF from: {pdf_url}")
+    # print(f"Saving file as: {output_filename}")
     
     try:
         urllib.request.urlretrieve(pdf_url, os.path.join(save_dir, output_filename))
         
-        print(f"Download successful! File saved at: {os.path.abspath(os.path.join(save_dir, output_filename))}")
+        # print(f"Download successful! File saved at: {os.path.abspath(os.path.join(save_dir, output_filename))}")
         return True
     
     except Exception as e:
         print(f"Error downloading {pdf_url}: {e}")
         return False
     
+def clean_text(text):
+    """Remove null bytes and other problematic characters from text."""
+    if not isinstance(text, str):
+        return text
+    # Remove null bytes and other control characters except newlines and tabs
+    return re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', text)
+
 def scrape_papers(query, date, max_results=2, verbose=False):
     # for naming conventions
     pdf_save_dir = f"../../mkpuzo-data/AURA_pdfs/papers_{date}"
@@ -66,6 +74,7 @@ def scrape_papers(query, date, max_results=2, verbose=False):
         try:
             reader = PdfReader(file)
             text = "\n".join(page.extract_text() or "" for page in reader.pages)
+            text = clean_text(text)
             metadata_dict[list(metadata_dict.keys())[i]]["full_text"] = text
         except Exception as e:
             metadata_dict[list(metadata_dict.keys())[i]]["full_text"] = f"[Error extracting text: {e}]"
@@ -79,4 +88,4 @@ if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("Usage: python full_scraper.py <date>")
         sys.exit(1)
-    scrape_papers(query="artificial intelligence", date=sys.argv[1], max_results=2, verbose=True)
+    scrape_papers(query="artificial intelligence", date=sys.argv[1], max_results=200, verbose=True)
