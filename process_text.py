@@ -20,6 +20,7 @@ import time
 import datetime
 import requests
 
+from google import genai # query Gemini
 from dotenv import load_dotenv
 
 def query_ollama_model(paper_txt, model="gemma3:12b", verbose=False):
@@ -165,6 +166,16 @@ def generate_keywords_and_defs(batch_filepath, kwd_model="gemma3:12b", def_model
         print(f"[ERROR] File not found. Double check folder exists at: {batch_filepath}")
         return
 
+def get_keywords(abstract, keywords=5):
+    '''Using a Google LLM to extract keywords from a paper abstract.'''
+    model = "gemini-2.5-flash-lite"
+    prompt = f"For the following paper abstract, extract {keywords} keywords to describe the topic and content of the paper. Return they keywords in a Python list. Return only the Python list, no extra words. For example: ['computer science', 'RAG', 'higher education', ...]. Here is the abstrac to analyze: {abstract}"
+    
+    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+    response = client.models.generate_content(
+        model=model, contents=prompt
+    )
+    return response.text
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
@@ -174,5 +185,5 @@ if __name__ == "__main__":
     load_dotenv()
 
     file_path = f"metadata/metadata_{sys.argv[1]}.json"
-    generate_keywords_and_defs(file_path, kwd_model="gemma3:12b", def_model="gemma3:12b", verbose=False)
-    # generate_keywords_and_defs(file_path, verbose=True, model="gemma3")
+    # generate_keywords_and_defs(file_path, kwd_model="gemma3:12b", def_model="gemma3:12b", verbose=False)
+    generate_keywords_and_defs(file_path, kwd_model="gemma3:12b", def_model="llama3.3", verbose=False)
