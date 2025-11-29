@@ -17,7 +17,6 @@ import re
 import sys
 import json
 import time
-import datetime
 import requests
 
 from google import genai # query Gemini
@@ -61,12 +60,16 @@ def query_ollama_model(paper_txt, model="gemma3:12b", verbose=False):
 def get_definitions(keywords, paper_txt, model="gemma3:12b", verbose=False):
     if not keywords:
         return {}
+    
     if model == "gemma3:12b":
+        ollama_url = os.getenv("OLLAMA_API")
+    elif model == "phi3:14b":
         ollama_url = os.getenv("OLLAMA_API")
     elif model == "llama3.3":
         ollama_url = os.getenv("OLLAMA_DAI_API")
     else:
-        raise ValueError("Invalid model name: {model}. Valid options: gemma3:12b, llama3.3")
+        raise ValueError("Invalid model name: {model}. Valid options: gemma3:12b, llama3.3, phi3:14b")
+    
     sys_prompt = f"{keywords}: {os.getenv('OLLAMA_PROMPT_DEFINITION_1')}"
     headers = {"Content-Type": "application/json"}
     
@@ -106,7 +109,10 @@ def check_keywords(keywords):
     if match:
         list_content = match.group(1)
         keywords = re.findall(r'["\']([^"\']+)["\']', list_content)
-    return keywords
+        return keywords
+    else:
+        # print(f"Cannot find valid Python list in response: {keywords}")
+        return []
 
 def check_definitions(definitions):
     dict_pattern = r'\{(?:[^{}]|(?:\{[^{}]*\}))*\}'
@@ -118,31 +124,52 @@ def check_definitions(definitions):
             if isinstance(definitions_dict, dict):
                 return definitions_dict
             else:
-                print(f"\n    Invalid dictionary format.")
+                # print(f"Invalid dictionary format: {definitions}")
+                pass
         except (ValueError, SyntaxError) as e:
-            print(f"\n    Failed to parse dictionary.")
+            # print(f"Failed to parse dictionary: {definitions}")
+            pass
     else:
-        print(f"    No dictionary found in model response.")
+        # print(f"No dictionary found in model response: {definitions}")
         return {}
+
+def clean_keywords(definitions):
+    num_keywords_defined = len(definitions.keys())
+    for word in definitions.keys():
+        if definitions[word] == 'None':
+            num_keywords_defined -= 1
+    return num_keywords_defined
+            
     
 def generate_keywords_and_defs(batch_filepath, kwd_model="gemma3:12b", def_model="llama3.3", verbose=False):
     load_dotenv()
     try:
         updated_dict = {}
+
+        num_kwds_generated = 0
+        num_dict_generated = 0
+        num_papers = 0
         
         with open(batch_filepath, "r") as f:
             metadata_dict = json.load(f)
             
             for i in range(len(metadata_dict.keys())): # for every paper
+                num_papers += 1
                 if verbose:
                     print(f"\n\n{i}: {metadata_dict[str(i)]['full_arxiv_url']}")
                     
                 keywords = query_ollama_model(paper_txt=metadata_dict[str(i)]['abstract'], model=kwd_model)
-                # make sure keywords are a proper python list
                 keywords = check_keywords(keywords)
+                
+                # if we have keywords and full paper text to search
                 if keywords and (metadata_dict[str(i)]['full_text'] is not None):
                     definitions = get_definitions(keywords=keywords, paper_txt=metadata_dict[str(i)]['full_text'], model=def_model, verbose=verbose)
                     definitions = check_definitions(definitions)
+                    
+                    if definitions: 
+                        num_dict_generated += 1
+                        num_kwds_generated += clean_keywords(definitions)
+                    
                     metadata_dict[str(i)]["keywords"] = keywords
                     metadata_dict[str(i)]["definitions"] = definitions
                     if verbose:
@@ -161,10 +188,11 @@ def generate_keywords_and_defs(batch_filepath, kwd_model="gemma3:12b", def_model
             with open(batch_filepath, "w") as f:
                 json.dump(updated_dict, f, indent=2)
                 
-                
     except FileNotFoundError:
         print(f"[ERROR] File not found. Double check folder exists at: {batch_filepath}")
         return
+    
+    return num_papers, num_kwds_generated, num_dict_generated
 
 def get_keywords(abstract, keywords=5):
     '''Using a Google LLM to extract keywords from a paper abstract.'''
@@ -185,5 +213,8 @@ if __name__ == "__main__":
     load_dotenv()
 
     file_path = f"metadata/metadata_{sys.argv[1]}.json"
-    # generate_keywords_and_defs(file_path, kwd_model="gemma3:12b", def_model="gemma3:12b", verbose=False)
-    generate_keywords_and_defs(file_path, kwd_model="gemma3:12b", def_model="llama3.3", verbose=False)
+    num_papers, num_kwds, num_dicts = generate_keywords_and_defs(file_path, kwd_model="gemma3:12b", def_model="gemma3:12b", verbose=False)
+    # num_papers, num_kwds, num_dicts = generate_keywords_and_defs(file_path, kwd_model="gemma3:12b", def_model="phi3:14b", verbose=False)
+    print(f"[{sys.argv[1]}] {(num_kwds/(num_papers*3))*100:.2f}% keyword extraction rate | Out of {num_papers} total papers: num papers w/ definitions={num_dicts}, num keywords extracted={num_kwds}")
+    
+    
