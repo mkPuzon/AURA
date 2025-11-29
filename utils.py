@@ -5,13 +5,10 @@ Contains general helpful functions for codebase.
 Sep 2025
 '''
 import os
+import re
 import json
-import time
 import subprocess
 from pathlib import Path
-
-import feedparser # parse/extract from RSS and Atom feeds
-import urllib.request # opening URLs
 
 def inspect_dictionary(d, indent=0):
     """ [Written by CLAUDE Sonnet 4]
@@ -114,6 +111,52 @@ def save_specific_paper(arxiv_id):
     # download pdf
     subprocess.run(["arxiv-downloader", arxiv_id, "-d" "./papers/papers_core"])
     
+
+def load_json_file(filepath):
+    """Load JSON data from file with error handling."""
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except (json.JSONDecodeError, FileNotFoundError) as e:
+        raise ValueError(f"Failed to load JSON file {filepath}: {e}")
+
+
+def ensure_directory_exists(directory):
+    """Ensure the specified directory exists."""
+    Path(directory).mkdir(parents=True, exist_ok=True)
+
+
+def check_directory_exists(directory):
+    """Check if the specified directory exists."""
+    return Path(directory).is_dir()
+
+
+def clean_text(text):
+    """Remove null bytes and other problematic characters from text."""
+    if not isinstance(text, str):
+        raise ValueError(f"Passed text is not a string: {text}")
+    # Remove null bytes and other control characters except newlines and tabs
+    return re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', text)
+    
+def track_keyword_rate(logfile):
+    percentages = []
+    with open(logfile, 'r') as f:
+        for line in f:
+            # Match lines with "keyword extraction rate" and capture the percentage
+            match = re.search(r'([\d.]+)% keyword extraction rate', line)
+            if match:
+                percentages.append(float(match.group(1)))
+    return percentages
     
 if __name__ == "__main__":
-    save_specific_paper("2404.18416v2")
+    file = "/home/mkpuzo/mkpuzo-data/AURA_pdfs/papers_2025-11-3/2511.19427v1.pdf"
+    logfile = "allOct.log"
+    
+    kwd_hit_rates = track_keyword_rate(logfile)
+    print(f"Mean: {sum(kwd_hit_rates) / len(kwd_hit_rates):.2f}")
+    print(f"Range: {min(kwd_hit_rates)}, {max(kwd_hit_rates)}")
+
+
+    
+    
+    
