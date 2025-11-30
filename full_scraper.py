@@ -107,4 +107,4 @@ if __name__ == "__main__":
         print("Usage: python full_scraper.py <date>")
         sys.exit(1)
     num_metadata, num_pdfs = scrape_papers(query="cs.AI", date=sys.argv[1], max_results=200, verbose=True)
-    print(f"[{sys.argv[1]}] {(num_pdfs/num_pdfs)*100:.2f}% of initial papers usable | {num_pdfs} full papers scraped | Metadata entries={num_metadata}, PDFs scraped={num_pdfs}")
+    print(f"[{sys.argv[1]}] {(num_pdfs/num_metadata)*100:.2f}% of initial papers usable | {num_pdfs} full papers scraped | Metadata entries={num_metadata}, PDFs scraped={num_pdfs}")
