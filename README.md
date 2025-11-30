@@ -1,5 +1,8 @@
 # AURA: AI Understanding, Research, and Analytics glossary for AI education
 
+[![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white)](https://www.python.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+
 AURA is a self-updating glossay built upon research paper processing pipeline that automates the analysis of academic papers from arXiv, enabling students to better understand cutting-edge AI research. The system fetches the latest papers from arXiv, processes their text, and prepares data for further analysis and display.
 
 ## Features
@@ -69,6 +72,13 @@ The system uses PostgreSQL to store:
 - Identified keywords and their definitions
 - Relationships between papers and terms
 
+## Current Statistics
+For scraping 200 most recent papers:
+- AVG 19s per paper metadata/pdf download | 3 second of enforced wait time
+- AVG 37m for 200 papers | 10 minutes of enforced wait time
+Using a local instance of Gemma3:12b for keyword and definition extraction:
+- AVG def extraction rate: 82.84% | Range = (73.17, 85.17)
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
@@ -76,4 +86,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Acknowledgments
 
 - Thank you to [arXiv](https://arxiv.org/) for use of its open access interoperability.
-- The open-source community for various libraries and tools
+- The open-source community for various libraries and tools.
