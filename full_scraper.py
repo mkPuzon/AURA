@@ -12,7 +12,6 @@ import urllib.request
 
 from pathlib import Path
 from pypdf import PdfReader
-from utils import clean_text
 from scrapers import get_arxiv_metadata_batch
 
 def download_pdf(pdf_url, save_dir, output_filename=None):
@@ -50,7 +49,7 @@ def scrape_papers(query, date, max_results=2, verbose=False):
     os.makedirs(pdf_save_dir, exist_ok=True)
     
     # get metadata
-    metadata_dict = get_arxiv_metadata_batch(query=query, sort_by="date", order="descending", max_results=max_results)
+    metadata_dict = get_arxiv_metadata_batch(query=query, date=date, max_results=max_results)
     num_papers_metadata = len(metadata_dict.keys())
     
     # download PDFs
@@ -99,12 +98,12 @@ def scrape_papers(query, date, max_results=2, verbose=False):
     os.makedirs("./metadata", exist_ok=True)
     with open(f"./metadata/metadata_{date_clean}.json", "w") as f:
         json.dump(metadata_dict, f, indent=2)
-
+        
     return num_papers_metadata, num_pdfs
     
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("Usage: python full_scraper.py <date>")
         sys.exit(1)
-    num_metadata, num_pdfs = scrape_papers(query="cs.AI", date=sys.argv[1], max_results=200, verbose=True)
+    num_metadata, num_pdfs = scrape_papers(query="cs.AI", date=sys.argv[1], max_results=200, verbose=False)
     print(f"[{sys.argv[1]}] {(num_pdfs/num_metadata)*100:.2f}% of initial papers usable | {num_pdfs} full papers scraped | Metadata entries={num_metadata}, PDFs scraped={num_pdfs}")

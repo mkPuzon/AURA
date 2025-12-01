@@ -5,27 +5,24 @@ Contains functions to get relevant research papers from the web. Currently can q
 
 Sep 2025
 '''
-import os
 import time
 import uuid
 import feedparser # parse/extract from RSS and Atom feeds
 import urllib.request # opening URLs
 
-def get_arxiv_metadata_batch(query, sort_by="date", order="descending", max_results=2):
+def date_conv(date_str):
+    year, month, day = date_str.split("-")
+    return f"{year}{month}{day}0000"
+
+def get_arxiv_metadata_batch(query, date, max_results=2):
     if " " in query:
         query = query.replace(" ", "+")
-    
-    if sort_by == "date":
-        sort_method = "submittedDate"
-    elif sort_by == "relevance":
-        sort_method = "relevance"
-    else:
-        raise ValueError(f"Unknown sorting request by: {sort_by}. Valid options: date, relevance.")
-    
-    if order not in ["descending", "ascending"]:
-        raise ValueError(f"Unknown sorting order: {order}. Valid options: ascending, descending.")
-    
-    request = f"http://export.arxiv.org/api/query?search_query=cat:{query}&sortBy={sort_method}&sortOrder={order}&max_results={max_results}"
+
+    # date_formatted = date_conv(date)
+    # print(f"Date passed in query: {date}, {date_formatted}")
+    request = f"http://export.arxiv.org/api/query?search_query=cat:{query}&sortBy=submittedDate&max_results={max_results}"
+    # arXiv search by date: https://groups.google.com/g/arxiv-api/c/mAFYT2VRpK0?pli=1
+    # request = f"http://export.arxiv.org/api/query?search_query=cat:{query}&submittedDate:[{date_formatted}+TO+{date_formatted}]&max_results={max_results}"
     
     with urllib.request.urlopen(request) as url:
         response = url.read()
