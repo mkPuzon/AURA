@@ -1,5 +1,6 @@
+
+.streamlit/
 metadata
-papers_core
 
 ######## Standard Python .gitignore ########
 
