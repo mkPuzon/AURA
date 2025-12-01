@@ -129,12 +129,12 @@ def dump_metadata_to_db(json_filepath, db_config, verbose=False):
                     )
 
                     # check if article already exists in db via title and uuid
-                    cur.execute(sql_check_duplicate, (paper.get('title', ''),paper.get('uuid', '')))
+                    cur.execute(sql_check_duplicate, (paper.get('title', ''), paper.get('uuid', '')))
                     existing_article = cur.fetchone()
                     
                     if existing_article:
                         if verbose:
-                            print(f"Skipping duplicate article: {paper.get('title', '')} (uuid: {paper.get('uuid', '')})")
+                            print(f"Skipping duplicate article: {paper.get('uuid', '')} {paper.get('title', '')}")
                             pass
                         continue
                     
