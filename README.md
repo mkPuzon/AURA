@@ -3,7 +3,7 @@
 [![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white)](https://www.python.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 
-AURA is a self-updating glossay built upon research paper processing pipeline that automates the analysis of academic papers from arXiv, enabling students to better understand cutting-edge AI research. The system fetches the latest papers from arXiv, processes their text, and prepares data for further analysis and display.
+AURA is a self-updating glossary built upon research paper processing pipeline that automates the analysis of academic papers from arXiv, enabling students to better understand cutting-edge AI research. The system fetches the latest papers from arXiv, processes their text, and prepares data for further analysis and display.
 
 ## Features
 
